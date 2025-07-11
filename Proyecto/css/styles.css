@@ -1,0 +1,125 @@
+.titulo-principal {
+  text-align: center;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  padding: 20px 10px 10px;
+  line-height: 1.4;
+}
+/* Agrupar y centrar todo en columna */
+.main-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* Ajustar el título */
+.titulo-principal {
+  text-align: center;
+  color: white;
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 30px;
+  padding: 0 10px;
+}
+
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #ff7a00, #ffbe00);
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-wrapper {
+  width: 100%;
+  max-width: 360px;
+  background: #fff;
+  border-radius: 20px;
+  padding: 30px 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  text-align: center;
+}
+
+.login-header {
+  margin-bottom: 20px;
+}
+
+.logo {
+  width: 90px;
+  height: 90px;
+  margin-bottom: 10px;
+}
+
+.welcome {
+  color: #ff7a00;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.login-card {
+  text-align: left;
+}
+
+.input-group {
+  margin-bottom: 15px;
+}
+
+.input-group label {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 5px;
+  display: block;
+}
+
+.input-group input,
+.input-group select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.button-container {
+  text-align: center;
+  margin-top: 15px;
+}
+
+.btn-ingresar {
+  background-color: #ff7a00;
+  color: white;
+  text-decoration: none;
+  padding: 10px 30px;
+  border-radius: 20px;
+  display: inline-block;
+  font-weight: bold;
+  transition: background 0.3s ease;
+}
+
+.btn-ingresar:hover {
+  background-color: #e06900;
+}
+
+.register-text {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 13px;
+}
+
+.register-text a {
+  color: #ff7a00;
+  text-decoration: none;
+  font-weight: bold;
+}

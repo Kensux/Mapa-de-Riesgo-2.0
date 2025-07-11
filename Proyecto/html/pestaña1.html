@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Mapa Interactivo - Ciudad Ojeda</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Leaflet y Leaflet Draw -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .custom-panel {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            font-family: sans-serif;
+            width: 220px;
+        }
+
+        label, select, input {
+            display: block;
+            margin-bottom: 8px;
+            width: 100%;
+        }
+
+        #togglePanel {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            float: right;
+        }
+
+        #exportarGeoJSON,
+        #descargarImagen {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 5px;
+            width: 100%;
+        }
+
+        #descargarImagen {
+            background: #ff8800;
+        }
+
+        #leyenda {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            font-family: sans-serif;
+            width: 200px;
+            z-index: 1000;
+        }
+
+        #leyenda ul {
+            list-style: none;
+            padding-left: 0;
+            margin: 0;
+        }
+
+        #leyenda li {
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #leyenda img {
+            width: 20px;
+            height: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="map"></div>
+
+    <div class="custom-panel" id="panel">
+        <button id="togglePanel">−</button>
+        <div id="panelContent">
+            <label for="zonaTipo">Tipo de Zona:</label>
+            <select id="zonaTipo">
+                <option value="Riesgo Alto">Riesgo Alto</option>
+                <option value="Riesgo Medio">Riesgo Medio</option>
+                <option value="Riesgo Bajo">Riesgo Bajo</option>
+            </select>
+
+            <label for="descripcion">Descripción:</label>
+            <input type="text" id="descripcion" placeholder="Ej: Zona inundable" />
+
+            <label for="color">Color:</label>
+            <input type="color" id="color" value="#ff0000" />
+
+            <label for="icono">Símbolo ISO 7010:</label>
+            <select id="icono">
+                <option value="choques.png">Choque</option>
+                <option value="incendio.jpg">Incendio</option>
+                <option value="inundacion.avif">Inundación</option>
+                <option value="deslizamiento.webp">Deslizamiento</option>
+                <option value="explosion.png">Explosión</option>
+            </select>
+
+
+            <button id="descargarImagen">Descargar Imagen</button>
+        </div>
+    </div>
+
+    <div id="leyenda">
+        <strong>Leyenda ISO 7010</strong>
+        <ul>
+            <li><img src="/icons/choques.png" alt="choques"> Choque</li>
+            <li><img src="/icons/incendio.jpg" alt="incendio"> Incendio</li>
+            <li><img src="/icons/inundacion.avif" alt="inundacion"> Inundación</li>
+            <li><img src="/icons/deslizamiento.webp" alt="deslizamiento"> Deslizamiento</li>
+            <li><img src="/icons/explosion.png" alt="explosion"> Explosión</li>
+        </ul>
+    </div>
+
+    <!-- JS de Leaflet y Leaflet Draw -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
+
+    <script>
+        const map = L.map('map', {
+            center: [10.2167, -71.3],
+            zoom: 14,
+            maxBounds: [[10.18, -71.35], [10.25, -71.26]],
+            maxBoundsViscosity: 1.0
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            minZoom: 13,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        const drawnItems = new L.FeatureGroup();
+        map.addLayer(drawnItems);
+
+        const drawControl = new L.Control.Draw({
+            draw: {
+                polygon: { shapeOptions: { color: '#ff0000' } },
+                rectangle: { shapeOptions: { color: '#ff0000' } },
+                marker: true,
+                polyline: false,
+                circle: false,
+                circlemarker: false
+            },
+            edit: {
+                featureGroup: drawnItems
+            }
+        });
+        map.addControl(drawControl);
+
+        map.on(L.Draw.Event.CREATED, function (event) {
+            const layer = event.layer;
+
+            const tipo = document.getElementById("zonaTipo").value;
+            const descripcion = document.getElementById("descripcion").value;
+            const color = document.getElementById("color").value;
+            const icono = document.getElementById("icono").value;
+
+            if (layer.setStyle) {
+                layer.setStyle({ color: color });
+            }
+
+            const texto = `
+                <strong>${tipo}</strong><br>
+                ${descripcion}<br>
+                <img src="/icons/${icono}" alt="${tipo}" style="width:30px;height:30px;margin-top:5px;">
+            `;
+            layer.bindPopup(texto);
+
+            drawnItems.addLayer(layer);
+
+            let center;
+            if (layer.getBounds) {
+                center = layer.getBounds().getCenter();
+            } else if (layer.getLatLng) {
+                center = layer.getLatLng();
+            }
+
+            const iconoPersonalizado = L.icon({
+                iconUrl: `/icons/${icono}`,
+                iconSize: [60, 60],
+                iconAnchor: [30, 30]
+            });
+
+            const marker = L.marker(center, { icon: iconoPersonalizado });
+            marker.bindPopup(texto);
+            drawnItems.addLayer(marker);
+
+            const feature = layer.toGeoJSON();
+            feature.properties = { tipo, descripcion, color, icono };
+            console.log("Zona marcada:", feature);
+        });
+
+        document.getElementById("togglePanel").addEventListener("click", () => {
+            const panelContent = document.getElementById("panelContent");
+            const toggleBtn = document.getElementById("togglePanel");
+
+            if (panelContent.style.display === "none") {
+                panelContent.style.display = "block";
+                toggleBtn.textContent = "−";
+            } else {
+                panelContent.style.display = "none";
+                toggleBtn.textContent = "+";
+            }
+        });
+
+        document.getElementById("exportarGeoJSON").addEventListener("click", () => {
+            const data = drawnItems.toGeoJSON();
+            const blob = new Blob([JSON.stringify(data, null, 2)], {
+                type: "application/json"
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "zonas_ciudad_ojeda.geojson";
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        document.getElementById("descargarImagen").addEventListener("click", () => {
+            html2canvas(document.getElementById("map"), {
+                useCORS: true,
+                allowTaint: true,
+                logging: true
+            }).then(canvas => {
+                const link = document.createElement("a");
+                link.download = "mapa_zona_riesgo.png";
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+            });
+        });
+    </script>
+</body>
+</html>
